@@ -27,7 +27,7 @@
 
 // TODO - SHKTwitter supports offline sharing, however the url cannot be shortened without an internet connection.  Need a graceful workaround for this.
 
-
+#import <Twitter/Twitter.h>
 #import "SHKConfiguration.h"
 #import "SHKTwitter.h"
 
@@ -98,7 +98,10 @@
 #pragma mark Authorization
 
 - (BOOL)isAuthorized
-{		
+{
+	if (NSClassFromString(@"TWTweetComposeViewController") && [TWTweetComposeViewController canSendTweet]) {
+		return YES;
+	}
 	return [self restoreAccessToken];
 }
 
@@ -186,6 +189,60 @@
 
 - (void)show
 {
+	if (NSClassFromString(@"TWTweetComposeViewController") && [TWTweetComposeViewController canSendTweet]) {
+		TWTweetComposeViewController *c = [[TWTweetComposeViewController alloc] init];
+		[c setInitialText:[NSString stringWithFormat:@"%@", item.text ? item.text : item.title]];
+		if (item.URL) {
+			[c addURL:item.URL];
+		}
+		if (item.image) {
+			[c addImage:item.image];
+		}
+		[c setCompletionHandler:^(TWTweetComposeViewControllerResult result) {
+			NSString *output;
+			
+			switch (result) {
+				case TWTweetComposeViewControllerResultCancelled:
+					// The cancel button was tapped.
+					output = @"Tweet cancelled.";
+					break;
+				case TWTweetComposeViewControllerResultDone:
+					// The tweet was sent.
+					output = @"Tweet done.";
+					break;
+				default:
+					break;
+			}
+			NSLog(@"%@", output);
+			//[self performSelectorOnMainThread:@selector(displayText:) withObject:output waitUntilDone:NO];
+			
+			// Dismiss the tweet composition view controller.
+			[c dismissModalViewControllerAnimated:YES];
+		}];
+		// Find the top window (that is not an alert view or other window)
+		UIWindow *topWindow = [[UIApplication sharedApplication] keyWindow];
+		if (topWindow.windowLevel != UIWindowLevelNormal)
+		{
+			NSArray *windows = [[UIApplication sharedApplication] windows];
+			for(topWindow in windows)
+			{
+				if (topWindow.windowLevel == UIWindowLevelNormal)
+					break;
+			}
+		}
+		
+		UIView *rootView = [[topWindow subviews] objectAtIndex:0];	
+		id nextResponder = [rootView nextResponder];
+		
+		if ([nextResponder isKindOfClass:[UIViewController class]])
+			[nextResponder presentModalViewController:c animated:YES];
+		
+		else
+			NSAssert(NO, @"ShareKit: Could not find a root view controller.  You can assign one manually by calling [[SHK currentHelper] setRootViewController:YOURROOTVIEWCONTROLLER].");
+		[c release];
+		return;
+	}
+	
 	if (item.shareType == SHKShareTypeURL)
 	{
 		[self shortenURL];
