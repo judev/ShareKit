@@ -77,6 +77,7 @@
 - (UIViewController *)getTopViewController;
 
 + (UIBarStyle)barStyle;
++ (UIColor*)barTintColor;
 + (UIModalPresentationStyle)modalPresentationStyle;
 + (UIModalTransitionStyle)modalTransitionStyle;
 

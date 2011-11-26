@@ -149,7 +149,7 @@ BOOL SHKinit;
 			nav.modalTransitionStyle = [SHK modalTransitionStyle];
 		
 		nav.navigationBar.barStyle = nav.toolbar.barStyle = [SHK barStyle];
-		
+		nav.navigationBar.tintColor = nav.toolbar.tintColor = [SHK barTintColor];
 		[topViewController presentModalViewController:nav animated:YES];			
 		self.currentView = nav;
 	}
@@ -166,6 +166,8 @@ BOOL SHKinit;
 		[topViewController presentModalViewController:vc animated:YES];
 		[(UINavigationController *)vc navigationBar].barStyle = 
 		[(UINavigationController *)vc toolbar].barStyle = [SHK barStyle];
+		[(UINavigationController *)vc navigationBar].tintColor =
+		[(UINavigationController *)vc toolbar].tintColor = [SHK barTintColor];
 		self.currentView = vc;
 	}
 		
@@ -230,7 +232,20 @@ BOOL SHKinit;
 		topViewController = topViewController.modalViewController;
 	return topViewController;
 }
-			
+
++ (UIColor*)barTintColor {
+	NSNumber *r = SHKCONFIG(barTintColorRed),
+	*g = SHKCONFIG(barTintColorGreen),
+	*b = SHKCONFIG(barTintColorBlue);
+	if (r && g && b) {
+		NSInteger red = [r intValue],
+		green = [g intValue],
+		blue = [b intValue];
+		return [UIColor colorWithRed:(float)red / 255 green:(float)green / 255 blue:(float)blue / 255 alpha:1.0];
+	}
+	return nil;
+}
+
 + (UIBarStyle)barStyle
 {
 	if ([SHKCONFIG(barStyle) isEqualToString:@"UIBarStyleBlack"])
